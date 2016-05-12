@@ -1,0 +1,13 @@
+.control-group {
+	margin: 10px 0 10px 5px;
+}
+
+.modal {
+	width:250px;
+}
+
+.required {
+	color: red;
+	font-weight: bold;
+	font-size: 20px;
+}

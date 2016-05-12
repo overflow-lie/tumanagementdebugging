@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hoperun.tumanagementdebugging.dao.RepoDao">
+
+	<select id="getTBoxActivetion" parameterType="Map" resultType="Map">
+
+		SELECT vin,bid,TSTATUS,lastactive,
+		FROM_UNIXTIME(lastactive,'%Y-%m-%d
+		%k:%i:%S') as 'lastactive Time'
+		FROM tab_tboxinfo info
+		<where>
+		info.TSTATUS = 2
+			<if test="startTime!=null and startTime!=''">
+			and	info.lastactive &gt;= UNIX_TIMESTAMP(#{startTime})
+			</if>
+			<if test="endTime!=null and endTime!=''">
+				and info.lastactive &lt;= UNIX_TIMESTAMP(#{endTime})
+			</if>
+		</where>
+		order by info.lastactive desc limit 100
+	</select>
+	<select id="getBasicRepoInfo" resultType="Map">
+		SELECT TSTATUS ,count(vin) FROM tab_tboxinfo group by TSTATUS
+	</select>
+
+
+
+</mapper>

@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>振铃记录日志查询</title>
+  <link href="css/bootstrap.css" rel="stylesheet" type="text/css" media="screen"/>
+  <link href="css/style.css" rel="stylesheet" type="text/css" media="screen"/>
+  <link href="css/bootstrap-datetimepicker.css" rel="stylesheet" type="text/css"  media="screen"/>
+  <link rel="stylesheet" href="css/jquery.bigautocomplete.css" type="text/css" />
+  <script language="javascript" src="js/jquery-1.8.3.min.js" type="text/javascript"></script>
+  <script language="javascript" src="js/bootstrap.min.js" type="text/javascript"></script>
+  <script language="javascript" src="js/top.js" type="text/javascript"></script>
+  <script language="javascript" src="js/common.js" type="text/javascript"></script>
+  <script language="javascript" src="js/bootstrap-datetimepicker.js" charset="UTF-8"></script>
+  <script language="javascript" src="js/bootstrap-datetimepicker.zh-CN.js" charset="UTF-8"></script>
+  <script language="javascript" src="js/jquery.bigautocomplete.js?v=2" type="text/javascript"></script>
+  
+<script language="javascript">
+	$(function() {
+		$("ul li:eq(4)").addClass("active");
+		hidePrompt();
+		
+		$('#datetimepicker_start').datetimepicker({
+			autoclose : true,
+			format : 'yyyy-mm-dd hh:ii:ss',
+			language : 'zh-CN',
+			todayBtn : 1,
+			todayHighlight : 1
+		});
+
+		$('#datetimepicker_end').datetimepicker({
+			autoclose : true,
+			format : 'yyyy-mm-dd hh:ii:ss',
+			language : 'zh-CN',
+			todayBtn : 1,
+			todayHighlight : 1
+		});
+
+		$("#searchBtn").click(function() {
+			if($("#vin").validateLength()){
+				getRingTaskLog();
+			}
+		});
+		
+		$("#vin").bigAutocomplete({
+	        width:400,
+	        url:'/managementdebugginghttpservice/service/getvinlike',
+	        callback:function(data){
+	        }
+	    });
+	});
+	
+
+	var getRingTaskLog = function() {
+		hidePrompt();
+		$("#panel_table").find("tbody").find("tr").remove();
+		var url = "/managementdebugginghttpservice/service/getringtasklog";
+		$.ajax({
+			url : url,
+			type : "POST",
+			dataType : "json",
+			data : {
+				vin : $("#vin").val(),
+				starttime: $("#startTime").val(),
+				endtime: $("#endTime").val()
+			},
+			error : function(request, textStatus, errorThrown) {
+				$("#errorPrompt").text("查询失败！");
+				$(".alert-danger").show();
+			},
+			success : function(data) {
+				
+				if (data == null) {
+					$("#errorPrompt").text("查询失败！当前VIN对应振铃记录日志为空。");
+					$(".alert-danger").show();
+				} else {
+					var status = data['head']['status'];
+					//如果执行成功
+					if (status == '0') {
+						var dataList = data['RingTaskLogList'];
+						var content = "";
+						$.each(dataList, function(i, value) {
+							content += "<tr>";
+							content += "<td>" + value.vin + "</td>";
+							content += "<td>" + value.vinRingStatus + "</td>";
+							content += "<td>" + value.isRingSucceed + "</td>";
+							content += "<td>" + value.retrySum + "</td>";
+							content += "<td>" + value.vinRingStatusTime
+									+ "</td>";
+							content += "<td>" + value.ringtaskTime + "</td>";
+							content += "</tr>";
+						});
+						$("#panel_table").find("tbody").append(content);
+						$("#successPrompt").text("查询成功！");
+						$(".alert-success").show();
+					} else {
+						$("#errorPrompt")
+								.text("查询失败！" + data['head']['reason']);
+						$(".alert-danger").show();
+					}
+				}
+			}
+		});
+	};
+</script>
+</head>
+ <body>
+		<form method="post" action="" id="queryForm">
+		<div style="margin-left:10px;margin-top:30px;">
+			<div class="alert alert-success alert-dismissable" style="width: 98%;">
+				<button type="button" class="close" data-dismiss="alert"
+					aria-hidden="true">&times;</button>
+				<span id="successPrompt"></span>
+			</div>
+
+			<div class="alert alert-danger alert-dismissable" style="width: 98%;">
+				<button type="button" class="close" data-dismiss="alert"
+					aria-hidden="true">&times;</button>
+				<span id="errorPrompt"></span>
+			</div>
+			<div class="panel panel-default"  style="width: 98%;">
+		    <div class="panel-heading" style="background-color: #d9edf7;">振铃记录日志查询</div>
+				<div class="panel-body">
+					<div class="control-group">
+						<span style="margin-right: 10px;margin-left:30px;">VIN</span> <input type="text"
+							name="vin" id="vin" style="width: 195px; "/><span class="required" style="margin-right:50px;">*</span>
+					</div>
+					<div class="control-group" style="margin-bottom:20px;">
+						<div style="float: left;">开始时间</div>
+						<div class="input-group date"
+							style="height: 20px; float: left; margin-left: 10px; margin-right: 15px;"
+							id="datetimepicker_start" data-link-field="dtp_input2"
+							data-link-format="yyyy-mm-dd hh:ii:ss">
+							<input type="text" class="form-control" id="startTime"
+								data-date-format="yyyy-mm-dd hh:ii:ss" /> <span
+								class="input-group-addon" style="width: 30px"><span
+								class="glyphicon glyphicon-calendar"></span></span>
+						</div>
+						<div style="float: left;">结束时间</div>
+						<div class="input-group date"
+							style="height: 20px; float: left; margin-left: 10px; margin-right: 60px;"
+							id="datetimepicker_end" data-link-format="yyyy-mm-dd hh:ii:ss">
+							<input type="text" class="form-control" id="endTime"
+								data-date-format="yyyy-mm-dd hh:ii:ss" /> <span
+								class="input-group-addon" style="width: 30px"><span
+								class="glyphicon glyphicon-calendar"></span></span>
+						</div>
+						<input type="button" name="searchBtn" id="searchBtn" value="查询"
+							class="btn btn-info btn-sm">
+					</div>
+					<table class="table table-bordered" id="panel_table" style="width: 100%">
+					<thead>
+						<tr>
+							<th width="8%">VIN</th>
+							<th width="18%">振铃当前执行状态</th>
+							<th width="12%">振铃是否下发成功</th>
+							<th width="12%">振铃重试次数</th>
+							<th width="12%">振铃当前执行状态发生时间</th>
+							<th width="12%">最后振铃状态更新时间</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+				</div>
+			</div>
+			 
+		</div>
+		</form>
+ </body>
+</html>

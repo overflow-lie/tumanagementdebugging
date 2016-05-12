@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>VIN信息查询</title>
+  <link href="css/bootstrap.css" rel="stylesheet" type="text/css" media="screen"/>
+  <link href="css/style.css" rel="stylesheet" type="text/css" media="screen"/>
+  <link rel="stylesheet" href="css/jquery.bigautocomplete.css" type="text/css" />
+  <script src="js/jquery-1.8.3.min.js" type="text/javascript"></script>
+  <script src="js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="js/top.js" type="text/javascript"></script>
+  <script src="js/common.js" type="text/javascript"></script>
+<script type="text/javascript">
+ $(function(){
+	 hidePrompt();
+	 /* $("#taskoffBtn").hide(); */
+	 $("#taskbenBtn").click(function(){
+		 $("#panel_table").find("tbody").find("tr").remove();
+		 getLogs();
+	 });
+	 $("#taskoffBtn").click(function(){
+		 offtask();
+	 });
+ });
+ var offtask = function(){
+	 hidePrompt();
+	 var url = "zotyetuadapterwebtask/tboxlog/offtask";
+	 $.ajax({
+		 url : url,
+		 type : "POST",
+		 dataType : "json",
+		 data : {
+			 ip : $("#ip").val(),
+			 port : $("#port").val(),
+			 bid : $("#bid").val()
+		 },
+		 error : function(request, textStatus, errorThrown) {
+			$("#errorPrompt").text("解析失败！");
+			$(".alert-danger").show();
+		 },
+		 success : function(data){
+				if(data['status']!="OK"){
+					$("#errorPrompt").text(data['errorMsg']);
+					$(".alert-danger").show();
+					$("#taskoffBtn").show();
+					$("#panel_table").find("tbody").find("tr").remove();
+					return;
+				}
+				$("#taskoffBtn").hide();
+				$("#panel_table").find("tbody").find("tr").remove();
+			}
+	 })
+ }
+ 
+ var getLogs = function(){
+	 hidePrompt();
+	 var url = "zotyetuadapterwebtask/tboxlog/getlogs";
+	 var content = "";
+	 $.ajax({
+			url : url,
+			type : "POST",
+			dataType : "json",
+			data : {
+				ip : $("#ip").val(),
+				port : $("#port").val(),
+				bid : $("#bid").val()
+			},
+			error : function(request, textStatus, errorThrown) {
+				$("#errorPrompt").text("解析失败！");
+				$(".alert-danger").show();
+				$("#taskoffBtn").hide();
+			},
+			success : function(data){
+				var logs = data['log']||[];
+				if(data['status']!="OK"){
+					$("#errorPrompt").text(data['errorMsg']);
+					$(".alert-danger").show();
+					return;
+				}
+				 $("#taskoffBtn").show();
+				
+				content += "<tr><td>"
+				$.each(logs,function(i,value){
+				    if(value!=""){
+						content += value+"<br/>";
+				    }
+				});
+				content += "</tr></td>"
+				$("#panel_table").find("tbody").append(content);
+			}
+	 })
+ }
+</script>
+</head>
+ <body>
+		<form method="post" action="" id="queryForm">
+		<div style="margin-left:10px;margin-top:30px;" >
+			
+			<div class="alert alert-success alert-dismissable" style="width: 98%;">
+				<button type="button" class="close" data-dismiss="alert"
+					aria-hidden="true">&times;</button>
+				<span id="successPrompt"></span>
+			</div>
+
+			<div class="alert alert-danger alert-dismissable" style="width: 98%;">
+				<button type="button" class="close" data-dismiss="alert"
+					aria-hidden="true">&times;</button>
+				<span id="errorPrompt"></span>
+			</div>
+			<div class="panel panel-default"  style="width: 98%;">
+		    <div class="panel-heading" style="background-color: #d9edf7;">Log</div>
+				<div class="panel-body">
+					<div class="control-group">
+						<span class="required">*</span> <span style="margin-right: 5px;"></span>
+						<span style="margin-right:20px;">IP</span><input id="ip" type="text" name="ip" value="172.16.7.211"> 
+						<span style="margin-right:20px;">PORT</span><input id="port" type="text" name="port" value="6711"/> 
+						<span style="margin-right:20px;">BID</span><input id="bid" type="text" name="bid" value="7435490"/>
+						<input type="button" name="taskBtn"  id="taskbenBtn" value="测试" class="btn btn-info btn-sm">
+						<input type="button" name="taskBtn"  id="taskoffBtn" value="结束" class="btn btn-info btn-sm">
+					</div>
+				</div>
+				<table class="table table-bordered" id="panel_table" style="width: 100%">
+					<thead>
+						<tr>
+							<th width="100%" align="center">Logs</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		</form>
+		
+		
+ </body>
+</html>

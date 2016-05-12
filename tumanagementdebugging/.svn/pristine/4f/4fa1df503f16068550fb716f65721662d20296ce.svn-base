@@ -1,0 +1,264 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>hoperun.tumanagementdebugging</groupId>
+	<artifactId>tumanagementdebugging</artifactId>
+	<version>1001.01-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>tumanagementdebugging-Tu信息调试统计管理系统</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<scriptSourceDirectory />
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<outputDirectory>target/classes</outputDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>**/*.xml</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resource</directory>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.properties</include>
+				</includes>
+				<excludes>
+
+					<exclude>servicetumanagementdebugging.sh</exclude>
+					<exclude>servicetumanagementdebugging.bat</exclude>
+
+				</excludes>
+			</resource>
+		</resources>
+		<finalName>tumanagementdebugging</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.7.2</version>
+				<configuration>
+					<forkMode>once</forkMode>
+					<argLine>-Dfile.encoding=UTF-8</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>
+								${project.build.directory}/lib
+							</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<!-- 使用useUniqueVersions，避免遇到快照版， MANIFEST.MF文件中记录的时间戳版本 -->
+							<useUniqueVersions>false</useUniqueVersions>
+							<classpathPrefix>lib/</classpathPrefix>
+							<mainClass>hoperun.tumanagementdebugging.bin.DebuggingBootStrap</mainClass>
+
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-lib-src-webapps</id>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<mkdir dir="target/tumanagementdebugging" />
+								<mkdir dir="target/tumanagementdebugging/lib" />
+								<mkdir dir="target/tumanagementdebugging/log" />
+								<mkdir dir="target/tumanagementdebugging/classes" />
+								<mkdir dir="target/tumanagementdebugging/classes/webcontent" />
+								<mkdir dir="target/tumanagementdebugging/classes/webcontent/css" />
+								<mkdir dir="target/tumanagementdebugging/classes/webcontent/js" />
+								<copy todir="target/tumanagementdebugging/lib">
+									<fileset dir="target/lib">
+										<include name="*" />
+									</fileset>
+									<fileset dir="target">
+										<include name="tumanagementdebugging.jar" />
+									</fileset>
+								</copy>
+								<copy todir="target/tumanagementdebugging/classes">
+									<fileset dir="src/main/resource">
+										<include name="log4j2.xml" />
+										<include name="proxy.properties" />
+										<include name="database.properties" />
+										<include name="mybatis-config.xml" />
+										<include name="tcpserver.properties" />
+									</fileset>
+								</copy>
+								<copy todir="target/tumanagementdebugging">
+									<fileset dir="src/main/resource">
+										<include name="tumanagementdebugging.sh" />
+										<include name="servicetumanagementdebugging.bat" />
+									</fileset>
+								</copy>
+								<copy todir="target/tumanagementdebugging/classes/webcontent">
+									<fileset dir="src/main/webcontent">
+										<include name="*" />
+									</fileset>
+								</copy>
+								<copy todir="target/tumanagementdebugging/classes/webcontent/css">
+									<fileset dir="src/main/webcontent/css">
+										<include name="*" />
+									</fileset>
+								</copy>
+								<copy todir="target/tumanagementdebugging/classes/webcontent/js">
+									<fileset dir="src/main/webcontent/js">
+										<include name="*" />
+									</fileset>
+								</copy>
+
+
+								<mkdir dir="target/tumanagementdebugging-rel" />
+								<mkdir dir="target/tumanagementdebugging-rel/lib" />
+								<mkdir dir="target/tumanagementdebugging-rel/log" />
+								<mkdir dir="target/tumanagementdebugging-rel/classes" />
+								<copy todir="target/tumanagementdebugging-rel/lib">
+									<fileset dir="target/lib">
+										<include name="*" />
+									</fileset>
+									<fileset dir="target">
+										<include name="tumanagementdebugging.jar" />
+									</fileset>
+								</copy>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+<!-- 				<plugin> -->
+<!-- 					<groupId>org.apache.tomcat.maven</groupId> -->
+<!-- 					<artifactId>tomcat7-maven-plugin</artifactId> -->
+<!-- 					<version>2.1</version> -->
+<!-- 					<configuration> -->
+<!-- 						<url>http://localhost:8080/manager/html</url> -->
+<!-- 						<server>tomcat</server> -->
+<!-- 						<uriEncoding>UTF-8</uriEncoding> -->
+<!-- 					</configuration> -->
+<!-- 				</plugin> -->
+			</plugins>
+		</pluginManagement>
+	</build>
+
+
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>3.2.8</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.26</version>
+		</dependency>
+		<!-- 数据库连接驱动 BoneCP -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.jolbox</groupId> -->
+<!-- 			<artifactId>bonecp</artifactId> -->
+<!-- 			<version>0.8.0.RELEASE</version> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>hoperun.adapter</groupId>
+			<artifactId>tuadaptercomm</artifactId>
+			<version>1001.01-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>hoperun.tutransmanagement</groupId>
+			<artifactId>tutransmanagement</artifactId>
+			<version>1001.01-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>hoperun</groupId>
+			<artifactId>proxyserver</artifactId>
+			<version>1002.01-SNAPSHOT</version>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>hoperun</groupId> -->
+<!-- 			<artifactId>proxyclienttcp</artifactId> -->
+<!-- 			<version>1001.01-SNAPSHOT</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.commons</groupId> -->
+<!-- 			<artifactId>commons-email</artifactId> -->
+<!-- 			<version>1.4</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>hoperun</groupId> -->
+<!-- 			<artifactId>taskrunner</artifactId> -->
+<!-- 			<version>1001.01-SNAPSHOT</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>hoperun</groupId> -->
+<!-- 			<artifactId>messagesender</artifactId> -->
+<!-- 			<version>1001.01-SNAPSHOT</version> -->
+<!-- 		</dependency> -->
+	</dependencies>
+</project>

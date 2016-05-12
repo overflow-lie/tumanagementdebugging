@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="OFF">
+	<Properties>
+		<!-- Linux目录：/var/opt/sirun/managementdebugging; Windows目录：d:\log -->
+		<Property name="LogDirPath">/Users/jnad/logs/avndebugging
+		</Property>
+	</Properties>
+	<appenders>
+		<!-- 开发过程日志 包含各种temp/track -->
+		<RollingRandomAccessFile name="TraceFile"
+			fileName="${LogDirPath}/trace.log" filePattern="${LogDirPath}/trace_%d{yyyy-MM-dd}.log.gz"
+			append="true">
+			<Filters>
+				<ThresholdFilter level="trace" onMatch="ACCEPT"
+					onMismatch="ACCEPT" />
+			</Filters>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+		</RollingRandomAccessFile>
+		<!-- 调试日志 只有debug级别以上的日志,不包含 temp级别日志-->
+		<RollingRandomAccessFile name="DebugFile"
+			fileName="${LogDirPath}/debug.log" filePattern="${LogDirPath}/debug_%d{yyyy-MM-dd}.log.gz"
+			append="true">
+			<Filters>
+				<ThresholdFilter level="debug" onMatch="ACCEPT"
+					onMismatch="DENY" />
+
+			</Filters>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+		</RollingRandomAccessFile>
+
+		<!-- 服务日志 info级别以上的日志 -->
+		<RollingRandomAccessFile name="ServiceFile"
+			fileName="${LogDirPath}/service.log" filePattern="${LogDirPath}/service_%d{yyyy-MM-dd}.log.gz"
+			append="true">
+			<filters>
+				<ThresholdFilter level="info" onMatch="ACCEPT"
+					onMismatch="DENY" />
+				<MarkerFilter marker="Service" onMatch="ACCEPT"
+					onMismatch="DENY" />
+			</filters>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+		</RollingRandomAccessFile>
+		
+		<!-- 告警日志 ,只有告警级别以上日志-->
+		<RollingRandomAccessFile name="WarmFile"
+			fileName="${LogDirPath}/warm.log" filePattern="${LogDirPath}/warm_%d{yyyy-MM-dd}.log.gz"
+			append="true">
+			<Filters>
+				<ThresholdFilter level="warm" onMatch="ACCEPT"
+					onMismatch="DENY" />
+				<MarkerFilter marker="warm" onMatch="ACCEPT"
+					onMismatch="DENY" />
+			</Filters>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+		</RollingRandomAccessFile>
+
+		<!-- 错误日志文件 -->
+		<RollingRandomAccessFile name="ErrorFile"
+			fileName="${LogDirPath}/error.log" filePattern="${LogDirPath}/error_%d{yyyy-MM-dd}.log.gz"
+			append="true">
+			<Filters>
+				<ThresholdFilter level="error" onMatch="ACCEPT"
+					onMismatch="DENY" />
+				<ThresholdFilter level="fatal" onMatch="DENY"
+					onMismatch="NEUTRAL" />
+				<MarkerFilter marker="Error" onMatch="ACCEPT"
+					onMismatch="DENY" />
+			</Filters>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+		</RollingRandomAccessFile>
+		<!-- 致命日志文件 -->
+		<RollingRandomAccessFile name="FatalFile"
+			fileName="${LogDirPath}/fatal.log" filePattern="${LogDirPath}/fatal_%d{yyyy-MM-dd}.log.gz"
+			append="true">
+			<Filters>
+				<ThresholdFilter level="fatal" onMatch="ACCEPT"
+					onMismatch="DENY" />
+				<MarkerFilter marker="Error" onMatch="ACCEPT"
+					onMismatch="DENY" />
+			</Filters>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %marker  %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+		</RollingRandomAccessFile>
+		<!--这个输出控制台的配置 -->
+		<Console name="Console" target="SYSTEM_OUT">
+			<!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
+			<ThresholdFilter level="trace" onMatch="ACCEPT"
+				onMismatch="ACCEPT" />
+			<!--这个都知道是输出日志的格式 -->
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} %p [%thread] %marker  %msg%xEx%n" />
+		</Console>
+	</appenders>
+
+	<loggers>
+		<root level="trace">
+			<appender-ref ref="Console" />
+			<appender-ref ref="TraceFile" />
+			<appender-ref ref="DebugFile" />
+			<appender-ref ref="ServiceFile" />
+			<appender-ref ref="WarmFile" />
+			<appender-ref ref="ErrorFile" />
+			<appender-ref ref="FatalFile" />
+		</root>
+	</loggers>
+</configuration>
+                          

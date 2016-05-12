@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<!-- 声明的顺序必须为: "(properties?,settings?,typeAliases?,typeHandlers?,objectFactory?,objectWrapperFactory?,plugins?,environments?,databaseIdProvider?,mappers?)"。  -->
+	<properties resource="database.properties" />
+	<settings>
+		<!-- 无法连接数据库等待秒数 -->
+		<setting name="defaultStatementTimeout" value="25" />
+		<!-- 设置日志框架   -->
+		<setting name="logImpl" value="LOG4J2"/>
+	</settings>
+	<typeAliases>
+		<package name="hoperun.tutransmanagement.zotye.bean" />
+	</typeAliases>
+	<!-- 默认的环境 ID  -->
+	<environments default="sirunIDC">
+		<environment id="sirunIDC">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="${jdbc.driverClassName}" />
+				<property name="url" value="${jdbc.url}" />
+				<property name="username" value="${jdbc.username}" />
+				<property name="password" value="${jdbc.password}" />
+				<!-- 在任意时间可以存在的活动（也就是正在使用）连接数量，默认值：10 -->
+				<property name="poolMaximumActiveConnections" value="30"/>
+				<!--  任意时间可能存在的空闲连接数。 在上述最大后可能继续新建连接! -->
+				<property name="poolMaximumIdleConnections" value="20"/>
+				<!-- 是一个底层设置，如果获取连接花费的相当长的时间，它会给连接池打印状态日志并重新尝试获取一个连接（避免在误配置的情况下一直安静的失败），默认值：20000 毫秒（即 20 秒） -->
+				<property name="poolTimeToWait" value="5000"/>
+				<!-- 5minute ping database  -->
+				<property name="poolPingEnabled" value="true"/>
+                <property name="poolPingQuery" value="select now() "/>
+                <property name="poolPingConnectionsNotUsedFor" value="6000"/>
+			</dataSource>
+		</environment>
+	</environments>
+	<mappers>
+		<package name="hoperun.tutransmanagement.zotye.dao"/>
+		<package name="hoperun.tumanagementdebugging.dao"/>
+	</mappers>
+	
+</configuration>
+
