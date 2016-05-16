@@ -1,12 +1,17 @@
 package hoperun.tumanagementdebugging.util;
 
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import com.google.common.cache.LoadingCache;
+
 import hoperun.adapter.comm.bean.TBoxMessage;
 import hoperun.adapter.comm.convert.Serialize2TBoxMessage;
 import hoperun.adapter.comm.util.Any2ByteUtil;
 import hoperun.adapter.comm.util.TByteUtil;
 import hoperun.adapter.comm.util.TCPMsgSplitUtil;
-import hoperun.loginfo.SelfLogger;
 import hoperun.proxy.client.tcp.bean.ClientChannle;
 import hoperun.proxy.client.tcp.bin.TcpClientFactory;
 import hoperun.proxy.client.tcp.client.service.BasicMessageRecviceServiceHandle;
@@ -22,12 +27,38 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 	private static String IP_adapter;
 	private static String PORT_adapter;
 
+	private static String statue= "OK";
+	
+	private static List<String> logList;
+	
+	private static TcpClientFactory tcf = new TcpClientFactory();
+	
+	private static String logCacheName;
+	
+	private static LoadingCache<String, List<String>> logCache = LogCacheFactory.getLogCache();
 	/*
 	 * 登陆需要修改的东西
 	 */
 //	private static String bid = "9880833";
 	private static String bid;
 	
+	public static List<String> getLogList(){
+		try {
+			return logCache.get(logCacheName);
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
+	}
+	
+	public static String getStatue() {
+		return statue;
+	}
+
+	public static void setStatue(String statue) {
+		SortLinkUpdateRequestTest.statue = statue;
+	}
+
 	public SortLinkUpdateRequestTest(int sleep, byte[] b){
 		this.b = b;
 		this.sleep = sleep;
@@ -37,33 +68,40 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 		bid = bId;
 		PORT_adapter = port;
 		IP_adapter=ip;
+		logCacheName=bId+"_"+port+"_"+ip;
 	}
 	
-	// private static String IP_adapter = "124.202.152.26";
-	// private static String PORT_adapter = "8260";
+// private static String IP_adapter = "124.202.152.26";
+// private static String PORT_adapter = "8260";
 
-	
-
-	
 //	private static String tbox_AES = "FFFFFFFFFFFFFFFC5";
 //	private static String sn = "ABCDEFGHIJKLMNOPQRSTUVWXYZ132";
-//	// private static String vin = "LJ8B5D3D2FD125618";
+//	private static String vin = "LJ8B5D3D2FD125618";
 //	private static String vin = "FFFFFFFFFFFFFFF11";
 //	private static String tbox_r16 = LangUtil.getRandomString(16); // tbox随机数
+	
+	public static TcpClientFactory getTcf() {
+		return tcf;
+	}
+
 
 	public void begin(){
-
+		
+		logCache.put(logCacheName, getLogList());
+		
+		SortLinkUpdateRequestTest.setStatue("OK");
 		SortLinkUpdateRequestTest mr = new SortLinkUpdateRequestTest();
-		TcpClientFactory tcf = new TcpClientFactory();
 		ClientChannle channle = new ClientChannle();
-		channle.setChannleName("test");
-
+		channle.setChannleName(logCacheName);
+		
 		channle.setIp(IP_adapter);
 		channle.setPort(Integer.valueOf(PORT_adapter));
 
 		channle.setClientLinkNum(1);
 		channle.setClientServiceHandlePath("hoperun.tumanagementdebugging.util.SortLinkUpdateRequestTest");
 		tcf.startTcpClient(channle);
+		//tcf.closeTcpClient("test");
+		//tcf.closeTcpClient(tcf.getTcpChannle(""));
 
 		// 发送初始化消息给服务器
 		byte[] msg = mr.normal_Hartbeat();
@@ -71,8 +109,22 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 		// 假如需要通过Adapter中转的话,需要"hex"一次数据
 		msg = TByteUtil.getHex(msg).replace(" ", "")
 				.replace(new String(new byte[]{0x0a}), "").getBytes();
-		tcf.sendMessage("test", msg);
+		getLogList().add(TByteUtil.getHex(msg).replace(" ", "")
+				.replace(new String(new byte[]{0x0a}), ""));
+		tcf.sendMessage(logCacheName, msg);
 		
+	}
+
+	public String getLogCacheName() {
+		return logCacheName;
+	}
+
+	public static LoadingCache<String, List<String>> getLogCache() {
+		return logCache;
+	}
+
+	public static void setLogCache(LoadingCache<String, List<String>> logCache) {
+		SortLinkUpdateRequestTest.logCache = logCache;
 	}
 
 	/**
@@ -88,7 +140,6 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 	 */
 	private byte[]  normal_Hartbeat(){
 		TBoxMessage tm = null;
-
 		// String s = new String(new byte[]{0, 6});
 
 		tm = getTMmodel("" + bid, // bid
@@ -101,6 +152,7 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 				new byte[]{0, 0});// messageCounter
 		try{
 			System.out.println("[正常心跳消息],等待6秒重新尝试获取下行消息");
+			getLogList().add("[正常心跳消息],等待6秒重新尝试获取下行消息");
 			Thread.sleep(6 * 1000);
 		} catch(InterruptedException e){
 			e.printStackTrace();
@@ -112,13 +164,17 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 	@Override
 	public byte[] callback(byte[] msg){
 		TByteUtil.printHex(msg);
+		getLogList().add(TByteUtil.getHex(msg,msg.length));
+		getLogList().add("得到消息,尝试转换为TboxMessageBean\n");
+		getLogList().add("将适配器消息解析正常消息\n");
+		
 		System.out.println("得到消息,尝试转换为TboxMessageBean");
 		System.out.println("将适配器消息解析正常消息");
 		
 		msg = TByteUtil.parseHstring(new String(msg));
 		TBoxMessage tm = Serialize2TBoxMessage.convert(msg);
 		if(tm==null){
-			SelfLogger.warm("解析失败", TByteUtil.getHex(msg));
+			getLogList().add("解析失败："+TByteUtil.getHex(msg));
 			System.exit(1);
 		}
 		
@@ -135,8 +191,9 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 			System.out.println("得到仪表req");
 		}
 		if(isCommond(tm, 1, 0xf5, 2)) { // 控制req
+			getLogList().add("得到仪表ACK");
 			System.out.println("得到仪表ACK");
-			// rmsg = normal_Hartbeat();
+			//rmsg = normal_Hartbeat();
 		}
 
 		if(isCommond(tm, 1, 0xf1, 1)) { // 控制req
@@ -146,7 +203,7 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 
 		if(isCommond(tm, 1, 0xf1, 2)) { // 控制req
 			System.out.println("得到控制ACK");
-			// rmsg = normal_Hartbeat();
+			//rmsg = normal_Hartbeat();
 		}
 
 		if(rmsg != null) {
@@ -154,17 +211,19 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 			rmsg = TByteUtil.getHex(rmsg).replace(" ", "")
 					.replace(new String(new byte[]{0x0a}), "").getBytes();
 		}
+		getLogList().add(TByteUtil.getHex(rmsg));
 		tm.getFeature().getDispatch().setDispatchCreationTime(System.currentTimeMillis()/1000);
-
 		return rmsg;
 	}
 
 	private byte[] send_VHSUpdate_2(TBoxMessage tm){
 		System.out.println("设置延迟发送仪表ACK 1s");
+		getLogList().add("设置延迟发送仪表ACK 1s");
 		new Thread(new SortLinkUpdateRequestTest(2, send_VHSUpdate_3(tm)),"vhs-2")
 				.start();
 
 		System.out.println("设置延迟发送心跳 2s");
+		getLogList().add("设置延迟发送心跳 2s");
 		new Thread(new SortLinkUpdateRequestTest(3, normal_Hartbeat()),"vhs-3").start();
 
 		tm.getFeature().getDispatch().setMid(2);
@@ -209,15 +268,18 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 	}
 
 	private byte[] send_RemoteOperation_2(TBoxMessage tm){
-		System.out.println("设置延迟发送控制ACK 1s");
+//		System.out.println("设置延迟发送控制ACK 1s");
+		getLogList().add("设置延迟发送控制ACK 1s");
 		new Thread(new SortLinkUpdateRequestTest(1, send_RemoteOperation_3(tm)),"control-3")
 				.start();
 
-		System.out.println("设置延迟发送控制END 2s");
+//		System.out.println("设置延迟发送控制END 2s");
+		getLogList().add("设置延迟发送控制END 2s");
 		new Thread(new SortLinkUpdateRequestTest(2, send_RemoteOperation_4(tm)),"control-4")
 				.start();
 
-		System.out.println("设置延迟发送心跳 3s");
+//		System.out.println("设置延迟发送心跳 3s");
+		logList.add("设置延迟发送心跳 3s");
 		new Thread(new SortLinkUpdateRequestTest(3, normal_Hartbeat()),"control-hartbate").start();
 
 		tm.getFeature().getDispatch().setMid(2);
@@ -303,8 +365,8 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 		byte b[] = tm.getServiceData();
 
 		int time = Any2ByteUtil.byte2int(b[0]);
-
-		SelfLogger.tempParam("[通讯维持消息] 当前服务器要求客户端休眠" + time + "秒,开始沉睡");
+		getLogList().add("[通讯维持消息] 当前服务器要求客户端休眠" + time + "秒,开始沉睡");
+//		SelfLogger.tempParam("[通讯维持消息] 当前服务器要求客户端休眠" + time + "秒,开始沉睡");
 		try{
 			Thread.sleep(time * 1000);
 		} catch(InterruptedException e){
@@ -383,14 +445,13 @@ public class SortLinkUpdateRequestTest extends BasicMessageRecviceServiceHandle
 		} catch(InterruptedException e){
 			e.printStackTrace();
 		}
-
-		System.out.println("-开始异步发送数据-");
+		getLogList().add("-开始异步发送数据-");
+//		System.out.println("-开始异步发送数据-");
 		// 假如需要通过Adapter中转的话,需要"hex"一次数据
 		msg = TByteUtil.getHex(b).replace(" ", "")
 				.replace(new String(new byte[]{0x0a}), "").getBytes();
-		TcpClientFactory tcf = new TcpClientFactory();
-
-		tcf.sendMessage("test", msg);
+		
+		tcf.sendMessage(logCacheName, msg);
 
 	}
 

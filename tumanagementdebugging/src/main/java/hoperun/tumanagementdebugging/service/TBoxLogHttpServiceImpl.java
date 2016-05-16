@@ -1,14 +1,13 @@
 package hoperun.tumanagementdebugging.service;
 
-import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import com.alibaba.fastjson.JSONObject;
 
 import hoperun.proxybusiness.business.ICallServiceInterface;
-import hoperun.tumanagementdebugging.util.LogReaderUtil;
 import hoperun.tumanagementdebugging.util.SortLinkUpdateRequestTest;
 import hoperun.tutransmanagement.zotye.util.HttpUtil;
 import hoperun.tutransmanagement.zotye.util.HttpUtil.HttpResponseContentType;
@@ -26,7 +25,9 @@ public class TBoxLogHttpServiceImpl implements ICallServiceInterface {
 		try {
 			String serviceName = getUriData(request.getUri(), "tboxlog");
 			switch (serviceName) {
-			case "getlogs":
+			case "starttask":
+				return startTask(requestMap);
+			case "getlog":
 				return getLogs(requestMap);
 			case "offtask":
 				return offtask(requestMap);
@@ -41,30 +42,45 @@ public class TBoxLogHttpServiceImpl implements ICallServiceInterface {
 		return returnProxyResponse("未知的命令", HttpResponseStatus.valueOf(404));
 	}
 
-	private HttpResponse offtask(Map<String, String> requestMap) {
+	private HttpResponse startTask(Map<String, String> requestMap) {
 		
 		final String ip = requestMap.get("ip");
 		final String port = requestMap.get("port");
 		final String bid = requestMap.get("bid");
-		
+
 		final String status = "OK";
-		
 		Map<String,Object> resultMap = new HashMap<>();
 
-		Map<String, Object> logMap = LogReaderUtil.getMap();
 		if(ip==null||port==null||bid==null){
 			resultMap.put("status","!"+status);
 			resultMap.put("errorMsg", "请输入完整信息");
 			return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
 		}
-		else if(logMap.isEmpty()){
-			return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
-		}else if(!bid.equals(logMap.get("bid"))&&ip.equals(logMap.get("ip"))&&port.equals(logMap.get("port"))){
-			resultMap.put("status","BEUSED");
-			resultMap.put("errorMsg", "不是进行中的测试！");
-			return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
+		
+		try{
+			// 发送初始化消息给服务器
+			SortLinkUpdateRequestTest sortLinkUpdateRequestTest = new SortLinkUpdateRequestTest(bid,port,ip);
+			sortLinkUpdateRequestTest.begin();
+
+		}catch(Exception e){
+			e.printStackTrace();
 		}
-		logMap.clear();
+		
+		return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
+	}
+
+	private HttpResponse offtask(Map<String, String> requestMap) {
+		
+		final String ip = requestMap.get("ip");
+		final String port = requestMap.get("port");
+		final String bid = requestMap.get("bid");
+		final String logCacheName = bid+"_"+port+"_"+ip;
+		final String status = "OK";
+		
+		Map<String,Object> resultMap = new HashMap<>();
+        
+		SortLinkUpdateRequestTest.getTcf().closeTcpClient(logCacheName);
+		SortLinkUpdateRequestTest.getLogCache().invalidate(logCacheName);
 		resultMap.put("status", status);
 		resultMap.put("errorMsg", "已结束测试");
 		return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
@@ -75,37 +91,14 @@ public class TBoxLogHttpServiceImpl implements ICallServiceInterface {
 		final String ip = requestMap.get("ip");
 		final String port = requestMap.get("port");
 		final String bid = requestMap.get("bid");
-
-		final String status = "OK";
+		final String logCacheName = bid+"_"+port+"_"+ip;
 		Map<String,Object> resultMap = new HashMap<>();
-
-		Map<String, Object> logMap = LogReaderUtil.getMap();
-		if(ip==null||port==null||bid==null){
-			resultMap.put("status","!"+status);
-			resultMap.put("errorMsg", "请输入完整信息");
-			return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
-		}
-		else if(logMap.isEmpty()){
-			logMap.put("bid", bid);
-			logMap.put("ip",ip);
-			logMap.put("port", port);
-		}else if(!bid.equals(logMap.get("bid"))&&ip.equals(logMap.get("ip"))&&port.equals(logMap.get("port"))){
-			resultMap.put("status","!"+status);
-			resultMap.put("errorMsg", "已有员工测试中。。。请稍后。。。");
-			return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );
-		}
-		try{
-			// 发送初始化消息给服务器
-			SortLinkUpdateRequestTest sortLinkUpdateRequestTest = new SortLinkUpdateRequestTest(bid,port,ip);
-			sortLinkUpdateRequestTest.begin();
-
-		}catch(Exception e){
+		try {
+			List<String> list = SortLinkUpdateRequestTest.getLogCache().get(logCacheName);
+			resultMap.put("log", list);
+			resultMap.put("status", "OK");
+		} catch (ExecutionException e) {
 			e.printStackTrace();
-		}finally{
-			LogReaderUtil lr = new LogReaderUtil(new File("d://log//warm.log"));
-			String[] logArr = lr.getLogs();
-			resultMap.put("log", Arrays.asList(logArr));
-			resultMap.put("status", status);
 		}
 		
 		return returnProxyResponse(JSONObject.toJSON(resultMap),HttpResponseStatus.OK );

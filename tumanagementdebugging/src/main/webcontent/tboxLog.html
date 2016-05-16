@@ -11,19 +11,22 @@
   <script src="js/top.js" type="text/javascript"></script>
   <script src="js/common.js" type="text/javascript"></script>
 <script type="text/javascript">
+var content = "";
  $(function(){
 	 hidePrompt();
 	 /* $("#taskoffBtn").hide(); */
 	 $("#taskbenBtn").click(function(){
 		 $("#panel_table").find("tbody").find("tr").remove();
-		 getLogs();
+		 starttask();
 	 });
 	 $("#taskoffBtn").click(function(){
 		 offtask();
 	 });
  });
  var offtask = function(){
+	 
 	 hidePrompt();
+	 time = true;
 	 var url = "zotyetuadapterwebtask/tboxlog/offtask";
 	 $.ajax({
 		 url : url,
@@ -51,11 +54,9 @@
 			}
 	 })
  }
- 
- var getLogs = function(){
+ var starttask = function(){
 	 hidePrompt();
-	 var url = "zotyetuadapterwebtask/tboxlog/getlogs";
-	 var content = "";
+	 var url = "zotyetuadapterwebtask/tboxlog/starttask";
 	 $.ajax({
 			url : url,
 			type : "POST",
@@ -70,8 +71,32 @@
 				$(".alert-danger").show();
 				$("#taskoffBtn").hide();
 			},
-			success : function(data){
-				var logs = data['log']||[];
+			success : time
+	 })
+ }
+var timeout = false;
+
+var time = function(data){
+	if(timeout) return;
+	getLogs(data);
+	setTimeout(time,1000);
+}
+var getLogs = function(data){
+	    content="";
+	    timeout=false;
+	    $("#panel_table").find("tbody").find("tr").remove();
+		var url = "zotyetuadapterwebtask/tboxlog/getlog";
+		$.ajax({
+			url : url,
+			type : "POST",
+			dataType : "json",
+			data : {
+				ip : $("#ip").val(),
+				port : $("#port").val(),
+				bid : $("#bid").val()
+			},
+		    success : function(data){
+		    	var logs = data['log']||[];
 				if(data['status']!="OK"){
 					$("#errorPrompt").text(data['errorMsg']);
 					$(".alert-danger").show();
@@ -79,17 +104,15 @@
 				}
 				 $("#taskoffBtn").show();
 				
-				content += "<tr><td>"
 				$.each(logs,function(i,value){
 				    if(value!=""){
-						content += value+"<br/>";
+						content = value+"<br/>"+content;
 				    }
 				});
-				content += "</tr></td>"
-				$("#panel_table").find("tbody").append(content);
-			}
-	 })
- }
+				$("#panel_table").find("tbody").append("<tr><td>"+content+"</tr></td>");
+		    }
+		})
+}
 </script>
 </head>
  <body>

@@ -240,6 +240,11 @@
 			<artifactId>proxyserver</artifactId>
 			<version>1002.01-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>hoperun</groupId>
+			<artifactId>tuadapterjointlogging</artifactId>
+			<version>1001.01-SNAPSHOT</version>
+		</dependency>
 <!-- 		<dependency> -->
 <!-- 			<groupId>hoperun</groupId> -->
 <!-- 			<artifactId>proxyclienttcp</artifactId> -->
